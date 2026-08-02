@@ -1,0 +1,16 @@
+{
+  "name": "xfetch-bitcoin-intelligence-starter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A dependency-free Bitcoin X/Twitter intelligence starter built with the xfetch Search API.",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env src/cli.mjs",
+    "demo": "node src/demo.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT"
+}
