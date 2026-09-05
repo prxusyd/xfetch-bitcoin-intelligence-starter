@@ -26,7 +26,7 @@ cp .env.example .env
 Add your API key to `.env`, then run:
 
 ```bash
-npm start
+npm run legacy
 ```
 
 The command prints a short readable summary and writes `output/bitcoin-radar.json`.
@@ -36,7 +36,7 @@ Need a key? [Create one through the Bitcoin workflow](https://xfetch.io/use-case
 ## Try the output without a key
 
 ```bash
-npm run demo
+npm run legacy:demo
 ```
 
 Demo mode uses a clearly synthetic fixture. It makes no network request and spends no credits.
