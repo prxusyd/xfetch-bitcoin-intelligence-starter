@@ -1,0 +1,6 @@
+# Install only after the initial live run succeeds and creates its state file.
+# Set real absolute paths to node and this extracted starter. Cron uses the host timezone.
+# One run per day, 07:17. The CLI's exclusive state lock prevents overlapping processes.
+17 7 * * * cd /absolute/path/xfetch-workflow-starter && /absolute/path/node --env-file=.env src/cli.mjs --config config/topic.json --state state/topic.json --out output/topic --require-state >> output/topic-cron.log 2>&1
+27 7 * * * cd /absolute/path/xfetch-workflow-starter && /absolute/path/node --env-file=.env src/cli.mjs --config config/accounts.json --state state/accounts.json --out output/accounts --require-state >> output/accounts-cron.log 2>&1
+# Rotate logs and archive reports as appropriate. This file does not install any schedule.

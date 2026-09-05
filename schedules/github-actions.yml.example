@@ -1,0 +1,92 @@
+# Copy to .github/workflows/xfetch-reports.yml in a private repository containing this starter at its root.
+# Set the XFETCH_API_KEY repository secret. Run manually first with initialize_or_reset=true.
+# Uncomment schedule only after reviewing both config files and the first results.
+name: xfetch reports
+on:
+  workflow_dispatch:
+    inputs:
+      initialize_or_reset:
+        description: "Start without prior state (first run, or after checking Usage for an interrupted run)"
+        type: boolean
+        default: false
+  # schedule:
+  #   - cron: '17 7 * * *' # UTC; GitHub schedules can be delayed.
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: xfetch-reports
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [topic, accounts]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Restore the immediately preceding run's progress
+        id: restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          RESET: ${{ inputs.initialize_or_reset || false }}
+          TEMPLATE: ${{ matrix.template }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$RUN_ATTEMPT" != "1" ]; then
+            echo "Use a new manual run instead of Re-run jobs; replays can spend a fresh budget."
+            exit 1
+          fi
+          mkdir -p state output
+          if [ "$RESET" = "true" ]; then
+            echo "args=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          workflow_id=$(gh api "repos/$GH_REPO/actions/runs/$RUN_ID" --jq .workflow_id)
+          previous=$(gh api "repos/$GH_REPO/actions/workflows/$workflow_id/runs?per_page=100" --jq ".workflow_runs | map(select(.id != $RUN_ID)) | sort_by(.created_at) | reverse | .[0]")
+          if [ "$previous" = "null" ]; then
+            echo "No prior run. Start manually with initialize_or_reset=true."
+            exit 1
+          fi
+          previous_id=$(printf '%s' "$previous" | jq -r .id)
+          status=$(printf '%s' "$previous" | jq -r .status)
+          conclusion=$(printf '%s' "$previous" | jq -r .conclusion)
+          if [ "$status" != "completed" ] || [ "$conclusion" = "cancelled" ] || [ "$conclusion" = "timed_out" ]; then
+            echo "The last run was interrupted. Check Usage before an explicit reset."
+            exit 1
+          fi
+          gh run download "$previous_id" --name "xfetch-state-$TEMPLATE" --dir state
+          test -s "state/$TEMPLATE.json"
+          echo "args=--require-state" >> "$GITHUB_OUTPUT"
+      - name: Collect and export
+        id: collect
+        env:
+          XFETCH_API_KEY: ${{ secrets.XFETCH_API_KEY }}
+          TEMPLATE: ${{ matrix.template }}
+          STATE_ARGS: ${{ steps.restore.outputs.args }}
+        run: node src/cli.mjs --config "config/$TEMPLATE.json" --state "state/$TEMPLATE.json" --out "output/$TEMPLATE" $STATE_ARGS
+      - name: Preserve progress even when collection fails
+        if: ${{ always() && steps.collect.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: xfetch-state-${{ matrix.template }}
+          path: state/${{ matrix.template }}.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save readable report and data files
+        if: ${{ always() && steps.collect.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: xfetch-report-${{ matrix.template }}
+          path: output/${{ matrix.template }}/
+          if-no-files-found: warn
+          retention-days: 30

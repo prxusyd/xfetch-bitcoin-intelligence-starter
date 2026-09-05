@@ -1,0 +1,8 @@
+{
+  "template": "topic",
+  "query": "bitcoin min_faves:100 lang:en -filter:replies",
+  "pageSize": 20,
+  "maxPosts": 100,
+  "maxPages": 10,
+  "budgetCredits": 250
+}

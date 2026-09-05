@@ -1,16 +1,21 @@
 {
   "name": "xfetch-bitcoin-intelligence-starter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "A dependency-free Bitcoin X/Twitter intelligence starter built with the xfetch Search API.",
   "type": "module",
-  "scripts": {
-    "start": "node --env-file=.env src/cli.mjs",
-    "demo": "node src/demo.mjs",
-    "test": "node --test"
-  },
   "engines": {
-    "node": ">=20.6"
+    "node": ">=20.6.0"
   },
-  "license": "MIT"
+  "scripts": {
+    "start": "node --env-file=.env src/cli.mjs --config config/bitcoin.json --state state/bitcoin.json --out output/bitcoin",
+    "topic": "node --env-file=.env src/cli.mjs --config config/topic.json",
+    "accounts": "node --env-file=.env src/cli.mjs --config config/accounts.json",
+    "demo": "node src/cli.mjs --demo --config config/topic.json",
+    "demo:accounts": "node src/cli.mjs --demo --config config/accounts-demo.json",
+    "test": "node --test test/*.test.mjs",
+    "legacy": "node --env-file=.env src/legacy-cli.mjs",
+    "legacy:demo": "node src/demo.mjs"
+  },
+  "license": "MIT",
+  "description": "Runnable topic and account intelligence reports with pagination, deduplication, exports and credit budgets."
 }
