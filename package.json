@@ -17,5 +17,5 @@
     "legacy:demo": "node src/demo.mjs"
   },
   "license": "MIT",
-  "description": "Runnable topic and account intelligence reports with pagination, deduplication, exports and credit budgets."
+  "description": "Runnable topic and account intelligence reports with pagination, deduplication, exports and usage tracking."
 }

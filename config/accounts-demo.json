@@ -1,7 +1,10 @@
 {
   "template": "accounts",
-  "accounts": ["demo_research", "demo_builder", "missing_demo"],
+  "accounts": [
+    "demo_research",
+    "demo_builder",
+    "missing_demo"
+  ],
   "maxPosts": 50,
-  "maxPages": 10,
-  "budgetCredits": 150
+  "maxPages": 10
 }

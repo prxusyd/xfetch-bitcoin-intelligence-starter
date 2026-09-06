@@ -3,6 +3,5 @@
   "query": "\"AI agents\" lang:en -filter:replies",
   "pageSize": 20,
   "maxPosts": 100,
-  "maxPages": 10,
-  "budgetCredits": 250
+  "maxPages": 10
 }

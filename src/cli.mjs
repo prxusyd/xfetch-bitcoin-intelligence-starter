@@ -75,7 +75,7 @@ async function main() {
           authors: r.authors.length,
           newPosts: r.newPostIds.length,
           credits: r.creditsCharged,
-          unresolvedCredits: r.creditsUncertain,
+          unresolvedRequest: r.requestUncertain,
           seconds: r.durationMs / 1000,
           stop: r.stopReason,
           output: outputPath
@@ -85,7 +85,7 @@ async function main() {
       ) + "\n"
     );
     if (
-      !["complete", "post_limit", "budget_limit", "page_limit", "cancelled"].includes(r.stopReason)
+      !["complete", "post_limit", "page_limit", "cancelled"].includes(r.stopReason)
     ) {
       process.stderr.write(r.message + "\n");
       process.exitCode = 1;

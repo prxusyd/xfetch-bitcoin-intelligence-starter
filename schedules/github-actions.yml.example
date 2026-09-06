@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$RUN_ATTEMPT" != "1" ]; then
-            echo "Use a new manual run instead of Re-run jobs; replays can spend a fresh budget."
+            echo "Use a new manual run instead of Re-run jobs; replays can repeat paid requests."
             exit 1
           fi
           mkdir -p state output

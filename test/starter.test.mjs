@@ -61,22 +61,15 @@ test("a schedule cannot silently start without its state", async () => {
   }
 });
 
-test("live transport against a local HTTP fixture paginates, caps requests and does not replay an unsupported API", async () => {
+test("standard API transport paginates without a capability probe and reports actual usage", async () => {
   const { createServer } = await import("node:http");
   const dir = await mkdtemp(join(tmpdir(), "xfetch-http-fixture-"));
   const { writeFile } = await import("node:fs/promises");
   const requests = [];
-  let supported = true;
   const server = createServer((request, response) => {
     response.setHeader("content-type", "application/json");
-    if (supported) response.setHeader("x-xfetch-credit-budget", "v1");
-    if (request.url === "/healthz") {
-      response.end('{"ok":true}');
-      return;
-    }
     requests.push({
       url: request.url,
-      budget: request.headers["x-xfetch-max-credits"],
       auth: request.headers.authorization
     });
     const second = request.url.includes("next_token=");
@@ -88,7 +81,7 @@ test("live transport against a local HTTP fixture paginates, caps requests and d
           authors: [{ id: "10", username: "fixture", follower_count: 5 }]
         },
         meta: {
-          credits: { charged: 5 },
+          credits: { charged: 150 },
           ...(!second ? { pagination: { next_token: "opaque-fixture" } } : {})
         }
       })
@@ -98,7 +91,7 @@ test("live transport against a local HTTP fixture paginates, caps requests and d
   try {
     await writeFile(
       join(dir, "config.json"),
-      JSON.stringify({ template: "topic", query: "fixture", pageSize: 2, budgetCredits: 10 })
+      JSON.stringify({ template: "topic", query: "fixture", pageSize: 2 })
     );
     const args = [
       "src/cli.mjs",
@@ -116,20 +109,15 @@ test("live transport against a local HTTP fixture paginates, caps requests and d
     };
     const result = JSON.parse((await exec(process.execPath, args, { env })).stdout);
     assert.equal(result.posts, 3);
-    assert.equal(result.credits, 10);
+    assert.equal(result.credits, 300);
     assert.equal(result.synthetic, false);
-    assert.deepEqual(
-      requests.map((r) => r.budget),
-      ["5", "5"]
-    );
+    assert.equal(requests.length, 2);
+    assert.ok(requests.every((r) => r.url.startsWith("/v1/search/recent/enriched?")));
     assert.ok(requests[1].url.includes("next_token=opaque-fixture"));
     assert.equal(requests[0].auth, "Bearer local-fixture-key");
-    supported = false;
-    await assert.rejects(
-      exec(process.execPath, args, { env }),
-      /Budget protection is not available/
-    );
-    assert.equal(requests.length, 2);
+    const next = JSON.parse((await exec(process.execPath, [...args, "--require-state"], { env })).stdout);
+    assert.equal(next.newPosts, 0);
+    assert.equal(requests.length, 4);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await rm(dir, { recursive: true, force: true });

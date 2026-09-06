@@ -1,7 +1,8 @@
 {
   "template": "accounts",
-  "accounts": ["OpenAI"],
+  "accounts": [
+    "OpenAI"
+  ],
   "maxPosts": 50,
-  "maxPages": 10,
-  "budgetCredits": 150
+  "maxPages": 10
 }
